@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:," />
+  <title>RAG Dental Assistant — Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,650&family=Public+Sans:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f3f8f7;
+      --paper: #ffffff;
+      --paper-2: #e9f3f1;
+      --ink: #173230;
+      --muted: #526c68;
+      --line: #c7dad6;
+      --teal: #0a776c;
+      --teal-dark: #075b54;
+      --teal-soft: #d6ebe7;
+      --aqua: #7fc5bb;
+      --warning: #a2521b;
+      --warning-bg: #fff2e7;
+      --shadow: 0 18px 60px rgba(21, 76, 69, .10);
+      --radius: 18px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0c1918;
+        --paper: #122523;
+        --paper-2: #18312e;
+        --ink: #edf8f6;
+        --muted: #aac4c0;
+        --line: #2a4844;
+        --teal: #79d1c4;
+        --teal-dark: #a0e1d7;
+        --teal-soft: #1d3b37;
+        --aqua: #3d9d91;
+        --warning: #ffc08d;
+        --warning-bg: #40291c;
+        --shadow: 0 18px 60px rgba(0, 0, 0, .22);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        linear-gradient(rgba(10,119,108,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(10,119,108,.035) 1px, transparent 1px),
+        var(--bg);
+      background-size: 32px 32px;
+      color: var(--ink);
+      font-family: "Public Sans", sans-serif;
+      line-height: 1.55;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    .page { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 36px 0 70px; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      min-height: 520px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr);
+      gap: 56px;
+      align-items: center;
+      padding: 72px 64px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      right: -115px;
+      top: -105px;
+      border: 56px solid var(--teal-soft);
+      border-radius: 50%;
+      opacity: .8;
+    }
+    .label, .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font: 500 12px/1 "Roboto Mono", monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--teal-dark);
+    }
+    .label::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 5px var(--teal-soft); }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      max-width: 760px;
+      margin: 24px 0 24px;
+      font: 650 clamp(44px, 6vw, 78px)/.98 "Newsreader", serif;
+      letter-spacing: -.045em;
+    }
+    .hero-copy > p { max-width: 690px; margin: 0; color: var(--muted); font-size: clamp(17px, 2vw, 21px); }
+    .hero-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 32px; }
+    .chip { padding: 8px 12px; border: 1px solid var(--line); color: var(--muted); font-size: 13px; background: var(--bg); }
+    .system-map { position: relative; z-index: 1; padding: 26px; background: var(--paper-2); border: 1px solid var(--line); }
+    .system-map h2 { font-size: 14px; margin-bottom: 18px; font-family: "Roboto Mono", monospace; font-weight: 500; }
+    .flow { display: grid; gap: 9px; }
+    .node { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 15px; background: var(--paper); border: 1px solid var(--line); }
+    .node span:first-child { font-weight: 600; font-size: 14px; }
+    .node code { color: var(--teal-dark); font: 500 11px "Roboto Mono", monospace; }
+    .arrow { text-align: center; color: var(--teal); font-size: 19px; line-height: 1; }
+    .section { margin-top: 80px; }
+    .section-head { display: flex; justify-content: space-between; gap: 36px; align-items: end; margin-bottom: 26px; }
+    .section-head h2 { margin: 10px 0 0; font: 650 clamp(31px, 4vw, 48px)/1.05 "Newsreader", serif; letter-spacing: -.025em; }
+    .section-head p { max-width: 520px; margin: 0; color: var(--muted); }
+    .demo-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, .65fr); gap: 20px; align-items: start; }
+    .chat-shell, .guardrails, .decision, .kb-shell { background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .chat-shell { min-height: 650px; display: flex; flex-direction: column; }
+    .chat-top { padding: 18px 22px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .chat-top strong { font-size: 14px; }
+    .status { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+    .status i { width: 8px; height: 8px; border-radius: 50%; background: #28a875; }
+    .messages { flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 24px; min-height: 390px; max-height: 520px; overflow: auto; }
+    .message { max-width: 84%; padding: 15px 17px; border: 1px solid var(--line); font-size: 15px; }
+    .message.assistant { align-self: flex-start; background: var(--paper-2); }
+    .message.user { align-self: flex-end; background: var(--teal); border-color: var(--teal); color: white; }
+    .message p { margin: 0; }
+    .message .source { display: block; border-top: 1px solid var(--line); margin-top: 12px; padding-top: 10px; color: var(--teal-dark); font: 500 11px/1.45 "Roboto Mono", monospace; }
+    .suggestions { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 22px 16px; }
+    .suggestion { color: var(--teal-dark); background: transparent; border: 1px solid var(--line); padding: 8px 11px; font-size: 12px; }
+    .suggestion:hover, .suggestion:focus-visible { background: var(--teal-soft); }
+    .composer { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 18px 22px 22px; border-top: 1px solid var(--line); }
+    .composer input, .kb-search {
+      width: 100%;
+      min-width: 0;
+      background: var(--bg);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      padding: 13px 14px;
+      outline: none;
+    }
+    .composer input:focus, .kb-search:focus { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-soft); }
+    .send { border: 0; background: var(--teal); color: white; font-weight: 700; padding: 0 20px; }
+    .send:hover, .send:focus-visible { background: var(--teal-dark); }
+    .guardrails { padding: 25px; box-shadow: none; }
+    .guardrails h3 { font: 650 26px/1.1 "Newsreader", serif; margin-bottom: 18px; }
+    .rule-list { display: grid; gap: 0; }
+    .rule { padding: 16px 0; border-top: 1px solid var(--line); }
+    .rule:first-child { border-top: 0; padding-top: 0; }
+    .rule b { display: block; margin-bottom: 4px; font-size: 14px; }
+    .rule p { margin: 0; color: var(--muted); font-size: 13px; }
+    .audit { margin-top: 24px; padding-top: 22px; border-top: 2px solid var(--ink); }
+    .audit-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .audit-head strong { font: 500 12px "Roboto Mono", monospace; text-transform: uppercase; letter-spacing: .06em; }
+    .reset { border: 0; padding: 0; background: transparent; color: var(--teal-dark); font-size: 12px; text-decoration: underline; }
+    .audit-log { display: grid; gap: 8px; }
+    .audit-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 10px; background: var(--bg); border: 1px solid var(--line); font: 10px/1.45 "Roboto Mono", monospace; }
+    .audit-row em { font-style: normal; color: var(--teal-dark); }
+    .audit-empty { color: var(--muted); font-size: 12px; }
+    .decisions { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+    .decision { min-height: 300px; padding: 30px; border-top: 0; border-left: 0; box-shadow: none; }
+    .decision .num { color: var(--teal-dark); font: 500 12px "Roboto Mono", monospace; }
+    .decision h3 { font: 650 26px/1.1 "Newsreader", serif; margin: 42px 0 12px; }
+    .decision p { color: var(--muted); font-size: 14px; margin-bottom: 0; }
+    .metric-list { margin: 15px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+    .metric-list li { font-size: 13px; padding-left: 17px; position: relative; }
+    .metric-list li::before { content: "—"; position: absolute; left: 0; color: var(--teal); }
+    .kb-shell { box-shadow: none; }
+    .kb-toolbar { padding: 20px; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; }
+    .count { white-space: nowrap; color: var(--muted); font: 12px "Roboto Mono", monospace; }
+    .kb-list { display: grid; grid-template-columns: repeat(2, 1fr); }
+    .kb-item { padding: 22px; border-bottom: 1px solid var(--line); }
+    .kb-item:nth-child(odd) { border-right: 1px solid var(--line); }
+    .kb-item h3 { margin-bottom: 8px; font-size: 16px; }
+    .kb-item p { color: var(--muted); font-size: 13px; margin-bottom: 13px; }
+    .doc-id { color: var(--teal-dark); font: 500 10px/1.4 "Roboto Mono", monospace; }
+    .disclaimer { margin-top: 24px; padding: 17px 20px; display: flex; gap: 12px; align-items: flex-start; background: var(--warning-bg); color: var(--warning); border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent); font-size: 13px; }
+    .disclaimer strong { white-space: nowrap; }
+    footer { margin-top: 54px; padding-top: 24px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 20px; color: var(--muted); font-size: 12px; }
+    .byline { color: var(--ink); font-weight: 600; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; min-height: auto; padding: 54px 38px; gap: 38px; }
+      .system-map { max-width: 580px; }
+      .demo-grid { grid-template-columns: 1fr; }
+      .decisions { grid-template-columns: 1fr; }
+      .decision { min-height: 0; }
+      .decision h3 { margin-top: 24px; }
+    }
+    @media (max-width: 640px) {
+      .page { width: min(100% - 24px, 1180px); padding-top: 12px; }
+      .hero { padding: 40px 22px 28px; }
+      h1 { font-size: 46px; }
+      .hero-meta { gap: 7px; }
+      .section { margin-top: 58px; }
+      .section-head { display: block; }
+      .section-head p { margin-top: 14px; }
+      .chat-shell { min-height: 600px; }
+      .messages { padding: 18px; }
+      .message { max-width: 94%; }
+      .composer { grid-template-columns: 1fr; }
+      .send { min-height: 46px; }
+      .suggestions { flex-wrap: wrap; overflow: visible; padding-bottom: 14px; }
+      .suggestion { flex: 1 1 100%; text-align: left; }
+      .hero::after { width: 170px; height: 170px; right: -78px; top: -75px; border-width: 38px; }
+      .kb-toolbar { grid-template-columns: 1fr; }
+      .kb-list { grid-template-columns: 1fr; }
+      .kb-item:nth-child(odd) { border-right: 0; }
+      .disclaimer { display: block; }
+      footer { display: block; }
+      footer span { display: block; margin-top: 6px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <span class="label">Prototype demo</span>
+        <h1 id="hero-title">RAG Dental Assistant — Prototype</h1>
+        <p>A retrieval-augmented assistant that answers dental operations and patient-education questions strictly from a curated, cited knowledge base.</p>
+        <div class="hero-meta" aria-label="Prototype attributes">
+          <span class="chip">18 curated documents</span>
+          <span class="chip">Citation-first answers</span>
+          <span class="chip">Confidence-based abstention</span>
+        </div>
+      </div>
+      <aside class="system-map" aria-label="Retrieval pipeline">
+        <h2>RETRIEVAL PIPELINE</h2>
+        <div class="flow">
+          <div class="node"><span>Visitor question</span><code>QUERY</code></div>
+          <div class="arrow">↓</div>
+          <div class="node"><span>Keyword retrieval</span><code>TOP-1</code></div>
+          <div class="arrow">↓</div>
+          <div class="node"><span>Confidence gate</span><code>≥ 0.42</code></div>
+          <div class="arrow">↓</div>
+          <div class="node"><span>Cited answer or abstention</span><code>SAFE</code></div>
+        </div>
+      </aside>
+    </section>
+
+    <div class="disclaimer" role="note">
+      <strong>Portfolio prototype.</strong>
+      <span>This demo provides general educational information only. It does not diagnose conditions, recommend treatment, or replace care from a licensed dentist.</span>
+    </div>
+
+    <section class="section" aria-labelledby="demo-title">
+      <div class="section-head">
+        <div>
+          <span class="section-label">01 / Interactive demo</span>
+          <h2 id="demo-title">Ask the knowledge base</h2>
+        </div>
+        <p>Try a supported question or test the confidence gate with something outside the corpus. Every successful retrieval exposes its source.</p>
+      </div>
+
+      <div class="demo-grid">
+        <div class="chat-shell">
+          <div class="chat-top">
+            <strong>Dental knowledge assistant</strong>
+            <span class="status"><i></i> Corpus ready</span>
+          </div>
+          <div class="messages" id="messages" aria-live="polite">
+            <div class="message assistant">
+              <p>Ask me about common dental aftercare, emergencies, clinic policies, preventive care, or insurance basics. I’ll answer only when I find a confident match.</p>
+              <span class="source">SYSTEM · CURATED CORPUS ONLY</span>
+            </div>
+          </div>
+          <div class="suggestions" aria-label="Suggested questions">
+            <button class="suggestion" type="button">What should I do after an extraction?</button>
+            <button class="suggestion" type="button">My tooth was knocked out</button>
+            <button class="suggestion" type="button">How often should I get a cleaning?</button>
+          </div>
+          <form class="composer" id="chat-form">
+            <label class="sr-only" for="question">Ask a dental question</label>
+            <input id="question" autocomplete="off" placeholder="Ask a dental question…" maxlength="220" />
+            <button class="send" type="submit">Ask assistant</button>
+          </form>
+        </div>
+
+        <aside class="guardrails" aria-labelledby="guardrails-title">
+          <h3 id="guardrails-title">Guardrails by design</h3>
+          <div class="rule-list">
+            <div class="rule"><b>Abstention over hallucination</b><p>Low-confidence retrieval returns a clear “I don’t know” instead of generated filler.</p></div>
+            <div class="rule"><b>No diagnosis or treatment planning</b><p>Information stays general and directs the visitor to a dentist for personal care.</p></div>
+            <div class="rule"><b>Cited answers</b><p>Every supported response identifies the curated document it came from.</p></div>
+            <div class="rule"><b>Unsafe-query handling</b><p>Requests for prescriptions, dosage, or self-treatment receive a safe redirect.</p></div>
+          </div>
+          <div class="audit">
+            <div class="audit-head"><strong>Session audit log</strong><button class="reset" id="reset-log" type="button">Clear</button></div>
+            <div class="audit-log" id="audit-log"><span class="audit-empty">Queries will appear here.</span></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="decisions-title">
+      <div class="section-head">
+        <div>
+          <span class="section-label">02 / Product decisions</span>
+          <h2 id="decisions-title">Built to be inspectable</h2>
+        </div>
+        <p>The prototype prioritizes safe, traceable behavior over conversational breadth—the right tradeoff for a healthcare education workflow.</p>
+      </div>
+      <div class="decisions">
+        <article class="decision">
+          <span class="num">DECISION 01</span>
+          <h3>RAG over fine-tuning</h3>
+          <p>Clinic policies and care guides change. Retrieval lets the team update source content without retraining, display citations, and constrain responses to approved material.</p>
+        </article>
+        <article class="decision">
+          <span class="num">DECISION 02</span>
+          <h3>Evaluation plan</h3>
+          <p>A golden Q&amp;A set would test whether the correct document is retrieved and whether unsupported questions are refused.</p>
+          <ul class="metric-list">
+            <li>Top-1 retrieval accuracy</li>
+            <li>Abstention precision and recall</li>
+            <li>Unsafe-query redirect rate</li>
+          </ul>
+        </article>
+        <article class="decision">
+          <span class="num">NEXT RELEASE</span>
+          <h3>Production path</h3>
+          <p>A production version would add authenticated EHR integration, role-based access, multilingual content, voice input, clinical review workflows, and monitored source versioning.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="kb-title">
+      <div class="section-head">
+        <div>
+          <span class="section-label">03 / Curated corpus</span>
+          <h2 id="kb-title">Knowledge base browser</h2>
+        </div>
+        <p>The complete embedded corpus is visible below, making the assistant’s scope and evidence boundaries easy to review.</p>
+      </div>
+      <div class="kb-shell">
+        <div class="kb-toolbar">
+          <label><span class="sr-only">Filter knowledge base</span><input class="kb-search" id="kb-search" type="search" placeholder="Filter by topic, tag, or source…"></label>
+          <span class="count" id="kb-count">18 documents</span>
+        </div>
+        <div class="kb-list" id="kb-list"></div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="byline">Product concept by Sharmadha Vaddepalli</div>
+      <span>Dentist → Healthcare Operations → AI Product Management</span>
+    </footer>
+  </main>
+
+  <script>
+    const knowledgeBase = [
+      { id: "OPS-001", topic: "Appointment scheduling", tags: ["appointment", "schedule", "booking", "reschedule", "new patient", "arrive"], patterns: ["how do I book an appointment", "when should I arrive", "can I reschedule"], answer: "For a routine visit, contact the clinic with your availability, reason for visit, and insurance details. New patients may be asked to arrive early for forms; call the clinic if you need to reschedule.", source: "Source: Front Desk Scheduling Guide v2.1" },
+      { id: "CARE-002", topic: "Post-extraction care", tags: ["extraction", "pulled", "removed", "bleeding", "gauze", "socket"], patterns: ["what should I do after an extraction", "my tooth was pulled", "care after tooth removal"], answer: "Follow the dentist’s written instructions, bite gently on gauze as directed, rest, and avoid forceful rinsing, smoking, straws, and strenuous activity during the initial healing period. Contact the dental office for bleeding that will not slow, worsening swelling, fever, or uncontrolled pain.", source: "Source: Post-Op Care Guide v1.2" },
+      { id: "CARE-003", topic: "Post-filling care", tags: ["filling", "filled", "numb", "bite", "chew", "restoration"], patterns: ["what can I do after a filling", "when can I eat after a filling", "my bite feels high"], answer: "Wait until numbness has worn off before chewing so you do not bite your cheek or tongue. Mild temperature sensitivity can occur briefly; contact the clinic if your bite feels uneven or pain is severe or persistent.", source: "Source: Restorative Aftercare Sheet v1.4" },
+      { id: "CARE-004", topic: "Root canal aftercare", tags: ["root canal", "endodontic", "crown", "temporary", "sore"], patterns: ["what should I do after a root canal", "root canal soreness", "temporary crown care"], answer: "Some tenderness may occur after a root canal. Avoid chewing hard foods on the treated tooth until the final restoration is placed, follow the dentist’s instructions, and call if swelling, fever, or severe pain develops.", source: "Source: Endodontic Aftercare Brief v1.1" },
+      { id: "URG-005", topic: "Knocked-out tooth", tags: ["knocked out", "avulsed", "tooth fell out", "lost tooth", "trauma", "emergency"], patterns: ["my tooth was knocked out", "what do I do with an avulsed tooth", "tooth came out after injury"], answer: "A knocked-out permanent tooth is time-sensitive. Handle it by the crown, not the root; if dirty, rinse it gently without scrubbing. Keep it moist in milk or a tooth-preservation product and seek emergency dental care immediately. Do not reinsert a baby tooth.", source: "Source: Dental Emergency Triage Card v2.0" },
+      { id: "URG-006", topic: "Severe dental pain", tags: ["severe pain", "toothache", "swelling", "fever", "pain", "emergency", "abscess"], patterns: ["I have severe tooth pain", "when is tooth pain an emergency", "my face is swelling"], answer: "Severe or worsening tooth pain needs prompt dental assessment. Contact a dentist the same day. If swelling affects breathing or swallowing, spreads toward the eye or neck, or is accompanied by serious illness, seek emergency medical care.", source: "Source: Dental Emergency Triage Card v2.0" },
+      { id: "PREV-007", topic: "Cleaning frequency", tags: ["cleaning", "frequency", "hygiene", "checkup", "six months", "preventive"], patterns: ["how often should I get a cleaning", "do I need cleaning every six months", "dental checkup frequency"], answer: "Cleaning and exam frequency should be based on individual risk. Many people are scheduled about every six months, while patients with gum disease or higher risk may need more frequent visits. Your dentist or hygienist can set the right interval.", source: "Source: Preventive Care Guide v2.3" },
+      { id: "PREV-008", topic: "Fluoride basics", tags: ["fluoride", "toothpaste", "cavity", "varnish", "decay"], patterns: ["what does fluoride do", "is fluoride toothpaste useful", "why use fluoride"], answer: "Fluoride helps strengthen tooth enamel and can reduce the risk of cavities. Use fluoride toothpaste as directed for age, and ask a dentist whether professional fluoride treatment is appropriate for your cavity risk.", source: "Source: Preventive Care Guide v2.3" },
+      { id: "FIN-009", topic: "Dental insurance basics", tags: ["insurance", "coverage", "copay", "deductible", "benefit", "claim", "network"], patterns: ["how does dental insurance work", "is this covered", "what is a deductible"], answer: "Dental plans commonly use deductibles, annual maximums, network rules, and different coverage levels by service. Coverage is not a guarantee of payment; confirm benefits and estimated out-of-pocket cost with the plan and clinic before treatment.", source: "Source: Patient Benefits Explainer v1.5" },
+      { id: "FIN-010", topic: "FSA and HSA basics", tags: ["fsa", "hsa", "flexible spending", "health savings", "reimbursement", "receipt"], patterns: ["can I use my FSA for dental care", "does HSA cover dental", "need receipt for FSA"], answer: "Many eligible dental expenses can be paid with FSA or HSA funds, but plan rules vary. Keep itemized receipts and check eligibility with your plan administrator, especially for cosmetic services.", source: "Source: Patient Benefits Explainer v1.5" },
+      { id: "PRIV-011", topic: "HIPAA and privacy", tags: ["hipaa", "privacy", "records", "confidential", "information", "portal"], patterns: ["is my dental information private", "how are records shared", "what is HIPAA"], answer: "Dental practices generally protect identifiable health information under applicable privacy rules. Use the clinic’s secure portal for sensitive messages and ask for its Notice of Privacy Practices to learn how information may be used or shared.", source: "Source: Privacy & Communications Notice v1.3" },
+      { id: "OPS-012", topic: "Missed appointments", tags: ["missed appointment", "no show", "late", "cancel", "cancellation", "fee"], patterns: ["what if I miss my appointment", "is there a no show fee", "how late can I cancel"], answer: "Cancellation and no-show rules differ by clinic. Contact the office as early as possible if you cannot attend; the clinic can explain notice requirements, possible fees, and rescheduling options.", source: "Source: Attendance Policy Template v1.0" },
+      { id: "CARE-013", topic: "Denture care", tags: ["denture", "dentures", "soak", "clean", "remove", "adhesive"], patterns: ["how do I clean dentures", "should I sleep in dentures", "denture care"], answer: "Clean dentures daily with a soft denture brush and a product intended for dentures. Unless your dentist advises otherwise, remove them at night and store them as directed. Do not use hot water, which may distort them.", source: "Source: Removable Prosthetics Care Sheet v1.2" },
+      { id: "ORTH-014", topic: "Braces care", tags: ["braces", "bracket", "wire", "orthodontic", "floss", "wax"], patterns: ["how do I care for braces", "a brace wire is poking", "clean around brackets"], answer: "Brush carefully around brackets and wires, clean between teeth daily with the tools your orthodontic team recommends, and avoid foods that can break appliances. For a loose or poking wire, use orthodontic wax for comfort and contact the orthodontist.", source: "Source: Orthodontic Home Care Guide v1.6" },
+      { id: "ORTH-015", topic: "Clear aligner care", tags: ["aligner", "aligners", "invisalign", "tray", "retainer", "wear"], patterns: ["how do I clean aligners", "can I eat with aligners", "aligner care"], answer: "Remove aligners for eating and for drinks other than plain water, clean your teeth before reinserting them, and wash trays with cool or lukewarm water. Follow the prescribed wear schedule and contact the orthodontic team if a tray no longer fits.", source: "Source: Orthodontic Home Care Guide v1.6" },
+      { id: "SYM-016", topic: "Tooth sensitivity", tags: ["sensitivity", "sensitive", "cold", "hot", "sweet", "sharp pain"], patterns: ["why is my tooth sensitive", "cold hurts my teeth", "sensitivity toothpaste"], answer: "Sensitivity can have several causes, including exposed root surfaces, enamel wear, decay, or a cracked tooth. Use a soft brush and avoid aggressive brushing, but arrange a dental exam if sensitivity is new, localized, worsening, or persistent.", source: "Source: Common Symptoms Education Sheet v1.8" },
+      { id: "PED-017", topic: "Teething in children", tags: ["teething", "baby", "infant", "child", "first tooth", "drooling"], patterns: ["how can I help a teething baby", "when do baby teeth come in", "teething symptoms"], answer: "For teething discomfort, offer a clean chilled—not frozen—teething ring and gently massage the gums with a clean finger. Avoid numbing gels unless a pediatric clinician specifically recommends one, and contact a medical professional for fever or symptoms that seem unrelated to teething.", source: "Source: Pediatric Oral Health Handout v2.0" },
+      { id: "URG-018", topic: "Dry socket signs", tags: ["dry socket", "extraction pain", "bad taste", "bad breath", "days after", "socket"], patterns: ["what are signs of dry socket", "pain days after extraction", "bad taste after extraction"], answer: "Dry socket may cause intense or increasing pain a few days after an extraction, sometimes with pain that radiates, an unpleasant taste, or bad breath. Contact the dental office promptly for assessment; do not place home remedies in the socket.", source: "Source: Post-Op Complication Guide v1.2" }
+    ];
+
+    const stopWords = new Set(["a","an","the","i","is","are","was","were","to","of","for","my","me","do","does","did","can","could","should","would","what","when","how","why","with","after","before","in","on","and","or","it","this","that","have","has"]);
+    const unsafeTerms = ["prescribe", "prescription", "dosage", "dose", "how many mg", "milligrams", "antibiotic", "painkiller", "opioid", "amoxicillin", "pull my own", "extract my own", "cut my gum", "self treat"];
+    const messages = document.getElementById("messages");
+    const form = document.getElementById("chat-form");
+    const questionInput = document.getElementById("question");
+    const auditLog = document.getElementById("audit-log");
+    const kbList = document.getElementById("kb-list");
+    const kbSearch = document.getElementById("kb-search");
+    const kbCount = document.getElementById("kb-count");
+    let audits = [];
+
+    function normalize(text) {
+      return text.toLowerCase().replace(/[^a-z0-9\s-]/g, " ").replace(/\s+/g, " ").trim();
+    }
+
+    function tokenize(text) {
+      return normalize(text).split(" ").filter(word => word.length > 1 && !stopWords.has(word));
+    }
+
+    function retrieve(query) {
+      const normalized = normalize(query);
+      const queryTokens = new Set(tokenize(query));
+      let best = null;
+      let bestScore = 0;
+      knowledgeBase.forEach(entry => {
+        let score = 0;
+        entry.tags.forEach(tag => {
+          const cleanTag = normalize(tag);
+          if (normalized.includes(cleanTag)) score += cleanTag.includes(" ") ? 5 : 3;
+          cleanTag.split(" ").forEach(token => { if (queryTokens.has(token)) score += 1; });
+        });
+        entry.patterns.forEach(pattern => {
+          const patternTokens = tokenize(pattern);
+          const overlap = patternTokens.filter(token => queryTokens.has(token)).length;
+          score += overlap * 1.5;
+          if (normalized.includes(normalize(pattern))) score += 7;
+        });
+        tokenize(entry.topic).forEach(token => { if (queryTokens.has(token)) score += 2; });
+        if (score > bestScore) { best = entry; bestScore = score; }
+      });
+      const confidence = Math.min(.98, bestScore / 12);
+      return { entry: best, score: bestScore, confidence };
+    }
+
+    function addMessage(text, role, source) {
+      const el = document.createElement("div");
+      el.className = "message " + role;
+      const p = document.createElement("p");
+      p.textContent = text;
+      el.appendChild(p);
+      if (source) {
+        const citation = document.createElement("span");
+        citation.className = "source";
+        citation.textContent = source;
+        el.appendChild(citation);
+      }
+      messages.appendChild(el);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function addAudit(query, docId, confidence) {
+      audits.unshift({ query, docId, confidence });
+      audits = audits.slice(0, 5);
+      renderAudits();
+    }
+
+    function renderAudits() {
+      auditLog.innerHTML = "";
+      if (!audits.length) {
+        const empty = document.createElement("span");
+        empty.className = "audit-empty";
+        empty.textContent = "Queries will appear here.";
+        auditLog.appendChild(empty);
+        return;
+      }
+      audits.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "audit-row";
+        const q = document.createElement("span");
+        q.textContent = "“" + item.query + "”";
+        const meta = document.createElement("em");
+        meta.textContent = item.docId + " · " + Math.round(item.confidence * 100) + "%";
+        row.append(q, meta);
+        auditLog.appendChild(row);
+      });
+    }
+
+    function answerQuestion(query) {
+      const clean = query.trim();
+      if (!clean) return;
+      addMessage(clean, "user");
+      const normalized = normalize(clean);
+      if (unsafeTerms.some(term => normalized.includes(term))) {
+        addMessage("I can’t provide prescriptions, dosage, or instructions for self-treatment. Please contact a dentist or pharmacist who can review your situation safely. If you have trouble breathing or swallowing, seek emergency medical care.", "assistant", "SAFETY RULE · UNSAFE-QUERY REDIRECT");
+        addAudit(clean, "GUARD-UNSAFE", 1);
+        return;
+      }
+      const result = retrieve(clean);
+      if (!result.entry || result.confidence < .42) {
+        addMessage("I don’t have verified information on that — please consult your dentist.", "assistant", "NO SOURCE · CONFIDENCE BELOW THRESHOLD");
+        addAudit(clean, "ABSTAIN", result.confidence);
+        return;
+      }
+      addMessage(result.entry.answer, "assistant", result.entry.source + " · " + result.entry.id);
+      addAudit(clean, result.entry.id, result.confidence);
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      const value = questionInput.value;
+      questionInput.value = "";
+      answerQuestion(value);
+    });
+
+    document.querySelectorAll(".suggestion").forEach(button => {
+      button.addEventListener("click", () => answerQuestion(button.textContent));
+    });
+
+    document.getElementById("reset-log").addEventListener("click", () => {
+      audits = [];
+      renderAudits();
+    });
+
+    function renderKnowledgeBase(filter = "") {
+      const needle = normalize(filter);
+      const filtered = knowledgeBase.filter(entry => {
+        const haystack = normalize([entry.id, entry.topic, entry.tags.join(" "), entry.source].join(" "));
+        return !needle || haystack.includes(needle);
+      });
+      kbList.innerHTML = "";
+      filtered.forEach(entry => {
+        const article = document.createElement("article");
+        article.className = "kb-item";
+        const h3 = document.createElement("h3");
+        h3.textContent = entry.topic;
+        const p = document.createElement("p");
+        p.textContent = entry.answer;
+        const meta = document.createElement("div");
+        meta.className = "doc-id";
+        meta.textContent = entry.id + " · " + entry.source;
+        article.append(h3, p, meta);
+        kbList.appendChild(article);
+      });
+      kbCount.textContent = filtered.length + (filtered.length === 1 ? " document" : " documents");
+    }
+
+    kbSearch.addEventListener("input", event => renderKnowledgeBase(event.target.value));
+    renderKnowledgeBase();
+  </script>
+</body>
+</html>
